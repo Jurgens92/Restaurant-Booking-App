@@ -44,7 +44,9 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.user.username}'s booking for {self.party_size} on {self.booking_date} at {self.booking_time}"
     
-    def clean(self):
+def clean(self):
+    # Skip validation if table is not assigned yet
+    if hasattr(self, 'table') and self.table is not None:
         # Validate the party size doesn't exceed table capacity
         if self.party_size > self.table.capacity:
             raise ValidationError(f"Party size exceeds table capacity ({self.table.capacity})")

@@ -32,6 +32,47 @@ def make_booking(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
+            # Create booking but don't save yet
+            booking = form.save(commit=False)
+            booking.user = request.user
+            
+            # Get form data for table search
+            date = form.cleaned_data['booking_date']
+            time = form.cleaned_data['booking_time']
+            party_size = form.cleaned_data['party_size']
+            
+            # Get all tables with enough capacity
+            suitable_tables = Table.objects.filter(capacity__gte=party_size)
+            
+            if not suitable_tables.exists():
+                messages.error(request, f'Sorry, we don\'t have any tables that can accommodate {party_size} people.')
+                return render(request, 'booking/make_booking.html', {'form': form})
+            
+            # Remove tables already booked at this time
+            booked_tables = Booking.objects.filter(
+                booking_date=date,
+                booking_time=time,
+                status__in=['PENDING', 'CONFIRMED']
+            ).values_list('table', flat=True)
+            
+            available_tables = suitable_tables.exclude(id__in=booked_tables)
+            
+            if available_tables.exists():
+                # Assign the booking to the first available table
+                booking.table = available_tables.first()
+                # Now save with the table assigned
+                booking.save()
+                messages.success(request, 'Your booking has been made!')
+                return redirect('booking_success')
+            else:
+                messages.error(request, 'Sorry, no tables available at that time. Please try another time.')
+    else:
+        form = BookingForm()
+    
+    return render(request, 'booking/make_booking.html', {'form': form})
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
             booking = form.save(commit=False)
             booking.user = request.user
             
