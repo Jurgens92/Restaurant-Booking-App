@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Book a Table - La Dolce Vita{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h1 class="mb-4">Book a Table</h1>
+        
+        {% if user.is_authenticated %}
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary mt-3">Make Reservation</button>
+            </form>
+        {% else %}
+            <div class="alert alert-info">
+                <p>Please <a href="{% url 'login' %}">login</a> or <a href="{% url 'register' %}">register</a> to make a booking.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

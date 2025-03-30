@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed - La Dolce Vita{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="mb-4 text-success">Booking Confirmed!</h1>
+        
+        <div class="alert alert-success p-4">
+            <p class="lead">Thank you for your reservation at La Dolce Vita. We look forward to serving you!</p>
+            <p>You can view or manage your bookings in your account.</p>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{% url 'my_bookings' %}" class="btn btn-primary me-2">View My Bookings</a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">Return to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

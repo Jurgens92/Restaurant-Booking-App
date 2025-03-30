@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Menu - La Dolce Vita{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-5">Our Menu</h1>
+
+<div class="mb-5">
+    <h2>Starters</h2>
+    <div class="row">
+        {% for item in starters %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.name }} <span class="text-muted float-end">${{ item.price }}</span></h5>
+                    <p class="card-text">{{ item.description }}</p>
+                    <div>
+                        {% if item.vegetarian %}<span class="badge bg-success me-1">Vegetarian</span>{% endif %}
+                        {% if item.vegan %}<span class="badge bg-success me-1">Vegan</span>{% endif %}
+                        {% if item.gluten_free %}<span class="badge bg-info">Gluten Free</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col">
+            <p>No starters available at the moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="mb-5">
+    <h2>Main Courses</h2>
+    <div class="row">
+        {% for item in mains %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.name }} <span class="text-muted float-end">${{ item.price }}</span></h5>
+                    <p class="card-text">{{ item.description }}</p>
+                    <div>
+                        {% if item.vegetarian %}<span class="badge bg-success me-1">Vegetarian</span>{% endif %}
+                        {% if item.vegan %}<span class="badge bg-success me-1">Vegan</span>{% endif %}
+                        {% if item.gluten_free %}<span class="badge bg-info">Gluten Free</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col">
+            <p>No main courses available at the moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add desserts and drinks sections similarly -->
+
+{% endblock %}
