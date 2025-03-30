@@ -2,10 +2,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils import timezone
+from django.db.models import Count
 from .models import Booking, Table, MenuItem
 from .forms import BookingForm
 from .forms import RegisterForm
+from .forms import TableForm
 from datetime import datetime
+
+
 
 
 def home(request):
@@ -192,3 +198,99 @@ def check_availability(request):
         return JsonResponse({'error': 'Missing date or party size'}, status=400)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+#admin functions
+
+@staff_member_required
+def admin_dashboard(request):
+    """Dashboard view for restaurant management"""
+    # Get today's date
+    today = timezone.now().date()
+    
+    # Get today's bookings
+    todays_bookings = Booking.objects.filter(booking_date=today)
+    
+    # Get upcoming bookings (next 7 days)
+    upcoming_bookings = Booking.objects.filter(
+        booking_date__gt=today,
+        booking_date__lte=today + timezone.timedelta(days=7)
+    )
+    
+    # Get tables usage statistics
+    table_usage = Booking.objects.filter(
+        status='CONFIRMED'
+    ).values('table__table_number').annotate(
+        booking_count=Count('id')
+    ).order_by('-booking_count')
+    
+    # Get tables current status
+    all_tables = Table.objects.all().order_by('table_number')
+    tables_status = []
+    
+    for table in all_tables:
+        current_booking = Booking.objects.filter(
+            table=table,
+            booking_date=today,
+            status='CONFIRMED'
+        ).first()
+        
+        tables_status.append({
+            'table': table,
+            'current_booking': current_booking,
+        })
+    
+    context = {
+        'todays_bookings': todays_bookings,
+        'upcoming_bookings': upcoming_bookings,
+        'table_usage': table_usage,
+        'tables_status': tables_status,
+    }
+    
+    return render(request, 'admin/dashboard.html', context)
+
+
+@staff_member_required
+def admin_confirm_booking(request, booking_id):
+    """Confirm a booking (admin version)"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = 'CONFIRMED'
+    booking.save()
+    messages.success(request, f'Booking #{booking_id} has been confirmed.')
+    return redirect('admin_dashboard')
+
+@staff_member_required
+def admin_cancel_booking(request, booking_id):
+    """Cancel a booking (admin version)"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = 'CANCELLED'
+    booking.save()
+    messages.success(request, f'Booking #{booking_id} has been cancelled.')
+    return redirect('admin_dashboard')
+
+@staff_member_required
+def table_management(request):
+    """Table management view"""
+    tables = Table.objects.all().order_by('table_number')
+    return render(request, 'admin/table_management.html', {'tables': tables})
+
+@staff_member_required
+def edit_table(request, table_id=None):
+    """Add or edit a table"""
+    if table_id:
+        table = get_object_or_404(Table, id=table_id)
+    else:
+        table = None
+    
+    if request.method == 'POST':
+        form = TableForm(request.POST, instance=table)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Table has been {"updated" if table else "created"}.')
+            return redirect('table_management')
+    else:
+        form = TableForm(instance=table)
+    
+    return render(request, 'admin/edit_table.html', {'form': form, 'table': table})
+
+

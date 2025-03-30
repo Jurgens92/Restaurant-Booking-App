@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurant Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Restaurant Management Dashboard</h1>
+        <p class="lead">Welcome to your restaurant management dashboard.</p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'table_management' %}" class="btn btn-primary">Manage Tables</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Tables status -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Tables Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Table #</th>
+                                <th>Capacity</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for table_status in tables_status %}
+                            <tr>
+                                <td>{{ table_status.table.table_number }}</td>
+                                <td>{{ table_status.table.capacity }}</td>
+                                <td>{{ table_status.table.get_location_display }}</td>
+                                <td>
+                                    {% if table_status.current_booking %}
+                                    <span class="badge bg-danger">Booked by {{ table_status.current_booking.user.username }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Available</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's bookings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Today's Bookings</h5>
+            </div>
+            <div class="card-body">
+                {% if todays_bookings %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Table</th>
+                                <th>Customer</th>
+                                <th>Party</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in todays_bookings %}
+                            <tr>
+                                <td>{{ booking.booking_time }}</td>
+                                <td>{{ booking.table.table_number }}</td>
+                                <td>{{ booking.user.username }}</td>
+                                <td>{{ booking.party_size }}</td>
+                                <td>
+                                    {% if booking.status == 'PENDING' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif booking.status == 'CONFIRMED' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.status == 'PENDING' %}
+                                        <a href="{% url 'admin_confirm_booking' booking.id %}" class="btn btn-sm btn-success">Confirm</a>
+                                        <a href="{% url 'admin_cancel_booking' booking.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                    {% elif booking.status == 'CONFIRMED' %}
+                                        <a href="{% url 'admin_cancel_booking' booking.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No bookings for today.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upcoming bookings -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Upcoming Bookings (Next 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_bookings %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Table</th>
+                                <th>Customer</th>
+                                <th>Party</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in upcoming_bookings %}
+                            <tr>
+                                <td>{{ booking.booking_date }}</td>
+                                <td>{{ booking.booking_time }}</td>
+                                <td>{{ booking.table.table_number }}</td>
+                                <td>{{ booking.user.username }}</td>
+                                <td>{{ booking.party_size }}</td>
+                                <td>
+                                    {% if booking.status == 'PENDING' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif booking.status == 'CONFIRMED' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.status == 'PENDING' %}
+                                        <a href="{% url 'admin_confirm_booking' booking.id %}" class="btn btn-sm btn-success">Confirm</a>
+                                        <a href="{% url 'admin_cancel_booking' booking.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                    {% elif booking.status == 'CONFIRMED' %}
+                                        <a href="{% url 'admin_cancel_booking' booking.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No upcoming bookings for the next 7 days.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
