@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
 from .models import Booking, Table, MenuItem
 from .forms import BookingForm
 from .forms import RegisterForm
 from datetime import datetime
+
 
 def home(request):
     # Homepage view
@@ -94,3 +96,58 @@ def register(request):
     else:
         form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
+
+def check_availability(request):
+    if request.method == 'GET':
+        date = request.GET.get('date')
+        party_size = request.GET.get('party_size')
+        
+        if date and party_size:
+            # Convert party_size to integer
+            try:
+                party_size = int(party_size)
+            except ValueError:
+                return JsonResponse({'error': 'Invalid party size'}, status=400)
+            
+            # Get all tables with sufficient capacity
+            suitable_tables = Table.objects.filter(capacity__gte=party_size)
+            
+            # Get all time slots (you could make this dynamic)
+            time_slots = ['12:00', '12:30', '13:00', '13:30', '14:00', 
+                         '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00']
+            
+            available_slots = []
+            
+            for time_slot in time_slots:
+                # Convert time_slot string to time object
+                from datetime import datetime
+                time_obj = datetime.strptime(time_slot, '%H:%M').time()
+                
+                # Find bookings at this time slot
+                booked_tables = Booking.objects.filter(
+                    booking_date=date,
+                    booking_time=time_obj,
+                    status__in=['PENDING', 'CONFIRMED']
+                ).values_list('table', flat=True)
+                
+                # Check if any suitable tables are available
+                available_tables = suitable_tables.exclude(id__in=booked_tables)
+                
+                if available_tables.exists():
+                    available_slots.append({
+                        'time': time_slot,
+                        'available': True,
+                        'tables': available_tables.count()
+                    })
+                else:
+                    available_slots.append({
+                        'time': time_slot,
+                        'available': False,
+                        'tables': 0
+                    })
+            
+            return JsonResponse({'available_slots': available_slots})
+        
+        return JsonResponse({'error': 'Missing date or party size'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

@@ -38,3 +38,19 @@ class RegisterForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+
+class BookingForm(forms.ModelForm):
+    class Meta:
+        model = Booking
+        fields = ['booking_date', 'booking_time', 'party_size', 'notes']
+        widgets = {
+            'booking_date': DateInput(),
+            'booking_time': TimeInput(),
+            'party_size': forms.NumberInput(attrs={'min': '1', 'max': '20'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set minimum date to today
+        from datetime import datetime
+        self.fields['booking_date'].widget.attrs['min'] = datetime.now().date()
